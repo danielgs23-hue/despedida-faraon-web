@@ -9,6 +9,7 @@ const beerBtn = document.querySelector("#beerBtn");
 const messages = [];
 const colors = ["#f2b94b", "#22d3ee", "#ff3d9a", "#7dff8a", "#ffffff"];
 const targetDate = new Date("2026-05-22T15:00:00+02:00");
+let sharedMessagesRef = null;
 
 function resizeCanvas() {
   const ratio = window.devicePixelRatio || 1;
@@ -30,6 +31,45 @@ function addMessage(text) {
     vy: (Math.random() > 0.5 ? 1 : -1) * (1.2 + Math.random() * 1.5),
     width,
     color: colors[Math.floor(Math.random() * colors.length)]
+  });
+}
+
+function isFirebaseConfigured() {
+  return Boolean(
+    window.firebase &&
+      window.firebaseConfig &&
+      window.firebaseConfig.apiKey &&
+      !window.firebaseConfig.apiKey.includes("PEGA_AQUI") &&
+      window.firebaseConfig.databaseURL
+  );
+}
+
+function setupSharedMessages() {
+  if (!isFirebaseConfigured()) {
+    return;
+  }
+
+  firebase.initializeApp(window.firebaseConfig);
+  sharedMessagesRef = firebase.database().ref("hypeMessages");
+
+  sharedMessagesRef.limitToLast(25).on("child_added", (snapshot) => {
+    const value = snapshot.val();
+
+    if (value && value.text) {
+      addMessage(value.text);
+    }
+  });
+}
+
+function launchSharedMessage(text) {
+  if (!sharedMessagesRef) {
+    addMessage(text);
+    return;
+  }
+
+  sharedMessagesRef.push({
+    text,
+    createdAt: firebase.database.ServerValue.TIMESTAMP
   });
 }
 
@@ -120,7 +160,7 @@ hypeForm.addEventListener("submit", (event) => {
     return;
   }
 
-  addMessage(text.toUpperCase());
+  launchSharedMessage(text.toUpperCase());
   hypeInput.value = "";
   hypeInput.focus();
 });
@@ -145,6 +185,7 @@ document.addEventListener("keydown", (event) => {
 
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
+setupSharedMessages();
 updateCountdown();
 setInterval(updateCountdown, 1000);
 drawMessages();
