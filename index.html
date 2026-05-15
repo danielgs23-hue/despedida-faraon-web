@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Operacion Faraon</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <canvas id="messageCanvas" aria-hidden="true"></canvas>
+
+    <main class="dashboard">
+      <section class="hero" aria-labelledby="pageTitle">
+        <p class="eyebrow">Madrid &middot; 22-24 mayo</p>
+        <h1 id="pageTitle">OPERACI&Oacute;N FARA&Oacute;N</h1>
+        <p class="subtitle">Panel oficial de hype, itinerario y ceremonias previas al gran viaje.</p>
+      </section>
+
+      <section class="hype-panel" aria-labelledby="hypeTitle">
+        <div>
+          <p class="section-label">Lanzador de mensajes</p>
+          <h2 id="hypeTitle">Envia una proclama al grupo</h2>
+        </div>
+        <form id="hypeForm" class="hype-form">
+          <label class="sr-only" for="hypeInput">Mensaje para lanzar</label>
+          <input id="hypeInput" maxlength="40" placeholder="Ej: Viva el Faraon" autocomplete="off">
+          <button type="submit">Lanzar</button>
+        </form>
+      </section>
+
+      <section class="countdown" aria-labelledby="countdownTitle">
+        <p class="section-label">Cuenta atras</p>
+        <h2 id="countdownTitle">Inicio de la expedicion</h2>
+        <div class="time-grid" role="timer" aria-live="polite">
+          <article>
+            <strong id="days">00</strong>
+            <span>Dias</span>
+          </article>
+          <article>
+            <strong id="hours">00</strong>
+            <span>Horas</span>
+          </article>
+          <article>
+            <strong id="minutes">00</strong>
+            <span>Min</span>
+          </article>
+          <article>
+            <strong id="seconds">00</strong>
+            <span>Seg</span>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Acciones principales">
+      <button id="timelineBtn" class="nav-button" type="button">Timeline</button>
+      <button id="dressBtn" class="nav-button" type="button">Dress</button>
+      <button id="beerBtn" class="nav-button beer-button" type="button">Cerveza</button>
+    </nav>
+
+    <dialog id="timelineModal" class="modal">
+      <button class="close-button" data-close="timelineModal" aria-label="Cerrar timeline">&times;</button>
+      <img class="timeline-image" src="assets/timeline-faraon.png" alt="Timeline oficial Operacion Faraon">
+    </dialog>
+
+    <dialog id="dressModal" class="modal dress-modal">
+      <button class="close-button" data-close="dressModal" aria-label="Cerrar dress code">&times;</button>
+      <div class="dress-collage" aria-label="Collage dress code bigote obligatorio">
+        <img src="assets/dress-01.jpeg" alt="Participante con bigote 1">
+        <img src="assets/dress-02.jpeg" alt="Participante con bigote 2">
+        <img src="assets/dress-03.jpeg" alt="Participante con bigote 3">
+        <img src="assets/dress-04.jpeg" alt="Participante con bigote 4">
+        <img src="assets/dress-05.jpeg" alt="Participante con bigote 5">
+        <p>Dress code: bigote obligatorio</p>
+      </div>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>
