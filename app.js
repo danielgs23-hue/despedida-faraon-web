@@ -9,7 +9,9 @@ const beerBtn = document.querySelector("#beerBtn");
 const messages = [];
 const colors = ["#f2b94b", "#22d3ee", "#ff3d9a", "#7dff8a", "#ffffff"];
 const targetDate = new Date("2026-05-22T15:00:00+02:00");
-let sharedMessagesRef = null;
+const seenMessageIds = new Set();
+const seenClientMessageIds = new Set();
+const sharedMessagesUrl = getSharedMessagesUrl();
 
 function resizeCanvas() {
   const ratio = window.devicePixelRatio || 1;
@@ -36,41 +38,100 @@ function addMessage(text) {
 
 function isFirebaseConfigured() {
   return Boolean(
-    window.firebase &&
-      window.firebaseConfig &&
+    window.firebaseConfig &&
       window.firebaseConfig.apiKey &&
       !window.firebaseConfig.apiKey.includes("PEGA_AQUI") &&
       window.firebaseConfig.databaseURL
   );
 }
 
-function setupSharedMessages() {
+function getSharedMessagesUrl() {
   if (!isFirebaseConfigured()) {
-    return;
+    return "";
   }
 
-  firebase.initializeApp(window.firebaseConfig);
-  sharedMessagesRef = firebase.database().ref("hypeMessages");
-
-  sharedMessagesRef.limitToLast(25).on("child_added", (snapshot) => {
-    const value = snapshot.val();
-
-    if (value && value.text) {
-      addMessage(value.text);
-    }
-  });
+  return `${window.firebaseConfig.databaseURL.replace(/\/$/, "")}/hypeMessages.json`;
 }
 
-function launchSharedMessage(text) {
-  if (!sharedMessagesRef) {
-    addMessage(text);
+function createClientMessageId() {
+  if (window.crypto && typeof window.crypto.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+async function pollSharedMessages() {
+  if (!sharedMessagesUrl) {
     return;
   }
 
-  sharedMessagesRef.push({
-    text,
-    createdAt: firebase.database.ServerValue.TIMESTAMP
-  });
+  try {
+    const response = await fetch(sharedMessagesUrl, { cache: "no-store" });
+    const data = await response.json();
+
+    if (!data) {
+      return;
+    }
+
+    Object.entries(data)
+      .sort((first, second) => (first[1].createdAt || 0) - (second[1].createdAt || 0))
+      .slice(-25)
+      .forEach(([id, value]) => {
+        if (!value || !value.text || seenMessageIds.has(id)) {
+          return;
+        }
+
+        seenMessageIds.add(id);
+
+        if (value.clientMessageId && seenClientMessageIds.has(value.clientMessageId)) {
+          return;
+        }
+
+        if (value.clientMessageId) {
+          seenClientMessageIds.add(value.clientMessageId);
+        }
+
+        addMessage(value.text);
+      });
+  } catch (error) {
+    console.warn("No se pudieron leer los mensajes compartidos.", error);
+  }
+}
+
+function setupSharedMessages() {
+  if (!sharedMessagesUrl) {
+    return;
+  }
+
+  pollSharedMessages();
+  setInterval(pollSharedMessages, 1200);
+}
+
+async function launchSharedMessage(text) {
+  const clientMessageId = createClientMessageId();
+  seenClientMessageIds.add(clientMessageId);
+  addMessage(text);
+
+  if (!sharedMessagesUrl) {
+    return;
+  }
+
+  try {
+    await fetch(sharedMessagesUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        text,
+        clientMessageId,
+        createdAt: Date.now()
+      })
+    });
+  } catch (error) {
+    console.warn("No se pudo enviar el mensaje compartido.", error);
+  }
 }
 
 function drawMessages() {
