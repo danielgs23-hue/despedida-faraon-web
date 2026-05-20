@@ -13,6 +13,14 @@ const seenMessageIds = new Set();
 const seenClientMessageIds = new Set();
 const sharedMessagesUrl = getSharedMessagesUrl();
 
+function getMessageFont() {
+  return window.innerWidth <= 480 ? "900 24px Segoe UI, sans-serif" : "900 32px Segoe UI, sans-serif";
+}
+
+function getMessageHeight() {
+  return window.innerWidth <= 480 ? 34 : 42;
+}
+
 function resizeCanvas() {
   const ratio = window.devicePixelRatio || 1;
   canvas.width = window.innerWidth * ratio;
@@ -23,7 +31,7 @@ function resizeCanvas() {
 }
 
 function addMessage(text) {
-  ctx.font = "900 32px Segoe UI, sans-serif";
+  ctx.font = getMessageFont();
   const width = Math.max(ctx.measureText(text).width, 120);
   messages.push({
     text,
@@ -136,7 +144,7 @@ async function launchSharedMessage(text) {
 
 function drawMessages() {
   ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-  ctx.font = "900 32px Segoe UI, sans-serif";
+  ctx.font = getMessageFont();
   ctx.textBaseline = "top";
 
   messages.forEach((message) => {
@@ -147,7 +155,7 @@ function drawMessages() {
       message.vx *= -1;
     }
 
-    if (message.y <= 0 || message.y + 42 >= window.innerHeight) {
+    if (message.y <= 0 || message.y + getMessageHeight() >= window.innerHeight) {
       message.vy *= -1;
     }
 
